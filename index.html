@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bokhyllo</title>
+<meta name="theme-color" content="#FBF0C4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bokhyllo">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a reading journal on butter-yellow paper — goal and shelf on top, tabs for read / reading / want / overview below. Single light look by design. */
+:root{
+  color-scheme:light;
+  --paper:#FBF0C4; --sheet:#FFFAE6; --ink:#2B2A1F; --muted:#6F6A4E; --line:#E4D49A;
+  --accent:#4F7396; --accent-soft:#CFDDEA; --accent-ink:#FFFFFF; --danger:#A2432F;
+  --spine-1:#7E9BB8; --spine-2:#6F86A0; --spine-3:#B97A5B; --spine-4:#8C6F8E; --spine-5:#9A9455; --spine-6:#5F7F8C;
+  --display:"Instrument Serif", Georgia, "Times New Roman", serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,9vw,64px);line-height:1;margin:0;letter-spacing:-0.01em}
+h1 em{color:var(--accent)}
+h2{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+.stats{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:10px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.notice{font-size:14px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px}
+.muted{color:var(--muted)}
+
+/* Goal */
+.goal{display:grid;gap:8px}
+.goal-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.goal-text{font-size:15px}
+.goal-text b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.track{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.track > span{display:block;height:100%;background:var(--accent);border-radius:4px}
+.goal-edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.goal-edit input{width:90px}
+
+/* Shelf */
+.shelf-box{overflow-x:auto;padding-bottom:4px}
+.shelf{display:flex;align-items:flex-end;gap:3px;min-height:150px;padding:0 4px;border-bottom:6px solid var(--ink);width:max-content;min-width:100%}
+.spine{width:26px;border-radius:2px 2px 0 0;border:0;padding:8px 0;cursor:pointer;color:#fff;
+  writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--body);font-size:11px;font-weight:600;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:translate .15s}
+.spine:hover,.spine:focus-visible{translate:0 -6px;outline:none}
+.shelf-empty{font-family:var(--display);font-style:italic;color:var(--muted);font-size:20px;align-self:center;padding:0 8px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px 8px;color:var(--muted);font-weight:600;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .n{font-family:var(--mono);font-size:12px;font-weight:400;margin-left:4px}
+
+/* Controls */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.toolbar input[type=search]{flex:1 1 200px;min-width:0}
+.toolbar select{max-width:100%}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:9px 12px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:9px 16px;font-weight:600}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.soft{background:var(--accent-soft);color:var(--ink)}
+.btn.small{padding:5px 11px;font-size:14px}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid currentColor}
+.btn.danger.armed{background:var(--danger);color:var(--sheet);border-color:var(--danger)}
+.btn:focus-visible,.link:focus-visible,.score-btn:focus-visible,.tab:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.link{background:none;border:0;padding:0;color:var(--accent);font-size:14px;font-weight:600}
+.ai::before{content:"✦ ";}
+
+/* Form */
+form{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;gap:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row > *{min-width:0}
+@media (max-width:540px){.row{grid-template-columns:1fr}}
+label,.lbl{display:grid;gap:5px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+label input,label textarea,label select{text-transform:none;letter-spacing:0;font-weight:400;font-size:16px;color:var(--ink)}
+.lbl-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.lbl-row .link{text-transform:none;letter-spacing:0;font-size:13px}
+textarea{min-height:110px;resize:vertical}
+.hint{font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden;width:max-content;max-width:100%}
+.seg button{background:var(--sheet);border:0;border-right:1px solid var(--line);padding:8px 14px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.score-input{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.score-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--sheet);color:var(--ink);
+  font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
+.score-btn.fill{background:var(--accent-soft);border-color:var(--accent-soft)}
+.score-btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.score-hint{font-family:var(--mono);font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+.form-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.form-actions .spacer{flex:1}
+.err{color:var(--danger);font-size:14px}
+.ai-note{font-size:13px;color:var(--accent)}
+
+/* Entries */
+.list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.entry{display:grid;grid-template-columns:1fr auto;gap:4px 16px;padding:18px 0;border-bottom:1px solid var(--line);align-items:start}
+.entry > *{min-width:0}
+.entry.flash{animation:flash 1.2s ease}
+@keyframes flash{from{background:var(--accent-soft)}to{background:transparent}}
+.e-head{grid-column:1}
+.e-title{font-family:var(--display);font-weight:400;font-size:26px;line-height:1.15;margin:0;text-wrap:balance}
+.e-author{color:var(--muted);font-size:15px}
+.e-meta{grid-column:2;grid-row:1;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.e-score{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.e-score b{font-size:22px;font-weight:500;color:var(--accent)}
+.e-score span{font-size:13px;color:var(--muted)}
+.bar{display:flex;gap:2px}
+.bar i{width:6px;height:6px;border-radius:1px;background:var(--line)}
+.bar i.on{background:var(--accent)}
+.e-date{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.full{grid-column:1 / -1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--sheet);border:1px solid var(--line);color:var(--muted)}
+.chip.g{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--ink)}
+.e-comment{margin:8px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;max-width:65ch}
+.e-comment.none{color:var(--muted);font-style:italic}
+.quotes{display:grid;gap:8px;margin:10px 0 0}
+blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);font-family:var(--display);font-style:italic;font-size:19px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;max-width:62ch}
+.e-actions{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:8px}
+.progress{display:grid;gap:6px;margin-top:10px;max-width:420px}
+.progress .lbl-row{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.page-upd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page-upd input{width:96px}
+@media (max-width:480px){
+  .entry{grid-template-columns:1fr}
+  .e-meta{grid-column:1;grid-row:auto;flex-direction:row;align-items:center;gap:10px;text-align:left}
+}
+.empty{padding:36px 0}
+.empty p{margin:0 0 6px}
+.empty .big{font-family:var(--display);font-size:28px}
+
+/* Overview */
+.ov{display:grid;gap:36px}
+.ov section{display:grid;gap:14px}
+.ov-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:170px;border-bottom:1px solid var(--ink);padding-top:18px}
+.mcol{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;min-width:0}
+.mcol .v{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mcol .b{width:100%;max-width:34px;background:var(--accent);border-radius:3px 3px 0 0}
+.mcol .b.zero{background:transparent}
+.mlabels{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center}
+.hbars{display:grid;gap:6px}
+.hrow{display:grid;grid-template-columns:minmax(0,9rem) 1fr 2.5rem;gap:10px;align-items:center;font-size:14px}
+.hrow .k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .t{height:12px;background:transparent}
+.hrow .t span{display:block;height:100%;background:var(--accent);border-radius:2px;min-width:2px}
+.hrow .t span.z{background:var(--line)}
+.hrow .n{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.score-dist .hrow{grid-template-columns:2rem 1fr 2.5rem}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.twocol > *{min-width:0}
+@media (max-width:600px){.twocol{grid-template-columns:1fr}}
+.toplist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.toplist li{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px}
+.toplist li > *{min-width:0}
+.toplist .s{font-family:var(--mono);color:var(--accent);font-variant-numeric:tabular-nums}
+.kpis{display:flex;flex-wrap:wrap;gap:12px 32px}
+.kpi b{display:block;font-family:var(--display);font-weight:400;font-size:40px;line-height:1}
+.kpi span{font-size:13px;color:var(--muted)}
+.recs{display:grid;gap:12px}
+.rec{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:4px}
+.rec h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0;line-height:1.2}
+.rec p{margin:0;font-size:15px}
+.rec .btn{justify-self:start;margin-top:6px}
+.backup{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:24px;margin-top:12px}
+.backup p{margin:0;max-width:65ch;font-size:14px}
+.import-btn{position:relative;overflow:hidden;display:inline-block;text-transform:none;letter-spacing:0;font-size:16px;color:var(--ink)}
+.import-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.import-btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));translate:-50% 0;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:6px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){.spine{transition:none}.entry.flash{animation:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Bok<em>hyllo</em></h1>
+    <div class="stats" id="stats">Laster bøkene dine …</div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="goal" id="goal"></div>
+
+  <div class="shelf-box" aria-label="Bokhylle med leste bøker">
+    <div class="shelf" id="shelf"><span class="shelf-empty">Hylla er tom.</span></div>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" data-tab="read" id="tab-read">Lest<span class="n"></span></button>
+    <button class="tab" role="tab" data-tab="reading" id="tab-reading">Leser nå<span class="n"></span></button>
+    <button class="tab" role="tab" data-tab="want" id="tab-want">Vil lese<span class="n"></span></button>
+    <button class="tab" role="tab" data-tab="stats" id="tab-stats">Oversikt</button>
+  </div>
+
+  <div id="listView" class="wrap" style="gap:20px;max-width:none">
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Søk i tittel, forfatter, kommentar eller sitater" aria-label="Søk">
+      <select id="filter" aria-label="Filtrer på sjanger eller merkelapp"></select>
+      <select id="sort" aria-label="Sorter"></select>
+      <button class="btn" id="newBtn" type="button">+ Ny bok</button>
+    </div>
+
+    <form id="form" hidden novalidate>
+      <h2 id="formTitle">Ny bok</h2>
+      <div class="lbl">Status
+        <div class="seg" id="f-status">
+          <button type="button" data-v="read">Lest</button><button type="button" data-v="reading">Leser nå</button><button type="button" data-v="want">Vil lese</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="lbl">
+          <div class="lbl-row"><span>Tittel</span><button type="button" class="link ai" id="autofillBtn" hidden>Fyll ut resten</button></div>
+          <input id="f-title" required autocomplete="off" aria-label="Tittel" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:16px;color:var(--ink)">
+        </div>
+        <label>Forfatter<input id="f-author" autocomplete="off"></label>
+      </div>
+      <div class="ai-note" id="aiNote" hidden></div>
+      <div class="row">
+        <label>Sjanger<input id="f-genre" list="genreList" autocomplete="off" placeholder="f.eks. roman"></label>
+        <label>Merkelapper<input id="f-tags" autocomplete="off" placeholder="skill med komma: pensum, anbefalt av Kari"></label>
+      </div>
+      <datalist id="genreList"></datalist>
+      <div class="lbl">Format
+        <div class="seg" id="f-format">
+          <button type="button" data-v="paper">Papir</button><button type="button" data-v="ebook">E-bok</button><button type="button" data-v="audio">Lydbok</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Antall sider<input type="number" id="f-pages" min="1" inputmode="numeric"></label>
+        <label data-for="reading">Er på side<input type="number" id="f-page" min="0" inputmode="numeric"></label>
+      </div>
+      <div class="row" data-for="read reading">
+        <label>Begynte<input type="date" id="f-start"></label>
+        <label data-for="read">Ferdig lest<input type="date" id="f-date"></label>
+      </div>
+      <div class="lbl" data-for="read">Score <span class="score-hint" id="scoreHint"></span>
+        <div class="score-input" id="f-score" role="radiogroup" aria-label="Score fra 1 til 10"></div>
+      </div>
+      <div class="lbl" data-for="read reading">
+        <div class="lbl-row"><span>Kommentar</span><span><button type="button" class="link ai" id="reviewBtn" hidden>Gjør stikkord om til omtale</button> <button type="button" class="link" id="undoReview" hidden>Angre</button></span></div>
+        <textarea id="f-comment" aria-label="Kommentar" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:16px;color:var(--ink)" placeholder="Hva satt igjen? Skriv gjerne bare stikkord, så kan Claude gjøre dem om til en omtale."></textarea>
+      </div>
+      <label data-for="read reading">Favorittsitater<textarea id="f-quotes" placeholder="Ett sitat per avsnitt. La det være en tom linje mellom hvert sitat."></textarea></label>
+      <label data-for="want">Notat<textarea id="f-note" placeholder="Hvorfor vil du lese den? Hvem anbefalte den?" style="min-height:80px"></textarea></label>
+      <div class="err" id="f-err" hidden></div>
+      <div class="form-actions">
+        <button class="btn" type="submit" id="saveBtn">Lagre</button>
+        <button class="btn ghost" type="button" id="cancelBtn">Avbryt</button>
+        <span class="spacer"></span>
+        <button class="btn danger" type="button" id="delBtn" hidden>Slett</button>
+      </div>
+    </form>
+
+    <section class="list" id="list" aria-live="polite"></section>
+  </div>
+
+  <div id="statsView" class="ov" hidden></div>
+
+  <footer class="backup">
+    <h2>Sikkerhetskopi</h2>
+    <p class="muted">Bøkene lagres bare på denne enheten, i nettleseren. Last ned en sikkerhetskopi innimellom. Den kan også brukes til å flytte bøkene til en annen mobil eller PC.</p>
+    <div class="toolbar">
+      <button class="btn ghost" type="button" id="exportBtn">Last ned sikkerhetskopi</button>
+      <label class="btn ghost import-btn">Hent fra sikkerhetskopi<input type="file" id="importFile" accept=".json,application/json"></label>
+    </div>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; };
+  const SPINES = ["--spine-1","--spine-2","--spine-3","--spine-4","--spine-5","--spine-6"];
+  const STATUS = {read:"Lest", reading:"Leser nå", want:"Vil lese"};
+  const FORMAT = {paper:"Papir", ebook:"E-bok", audio:"Lydbok"};
+  const MONTHS = ["jan","feb","mar","apr","mai","jun","jul","aug","sep","okt","nov","des"];
+  const BASE_GENRES = ["Roman","Krim","Fantasy","Science fiction","Novelle","Lyrikk","Biografi","Historie","Sakprosa","Samfunn","Filosofi","Psykologi","Pensum","Tegneserie"];
+  const SCORE_WORDS = {0:"ikke satt",1:"elendig",2:"svak",3:"svak",4:"under middels",5:"middels",6:"grei",7:"god",8:"veldig god",9:"glimrende",10:"mesterverk"};
+  const TAB_HASH = {read:"lest", reading:"leser", want:"vil-lese", stats:"oversikt"};
+  const SETTINGS_ID = "__settings";
+
+  let books = [], settings = {goals:{}};
+  let store = null, sample = null;
+  let tab = "read";
+  let editingId = null, formScore = 0, formStatus = "read", formFormat = "";
+  let reviewBackup = null, recs = null, recsState = "idle", statsYear = new Date().getFullYear();
+  let goalEditing = false;
+
+  /* ---------- helpers ---------- */
+  const hash = s => { let h = 0; for (const c of s) h = (h*31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+  const fmtDate = d => { if(!d) return ""; const [y,m,dd] = d.split("-"); return `${+dd}. ${MONTHS[+m-1]} ${y}`; };
+  const today = () => { const t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); };
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  const coll = new Intl.Collator("nb");
+  const nb1 = x => x.toFixed(1).replace(".",",");
+  const scoreOf = b => b.score ?? (b.rating ? b.rating*2 : 0);
+  const statusOf = b => b.status || "read";
+  const spineColor = b => `var(${SPINES[hash(b.title+(b.author||""))%SPINES.length]})`;
+  const ofStatus = s => books.filter(b => statusOf(b)===s);
+  const yearNow = new Date().getFullYear();
+  const plural = (n, one, many) => `${n} ${n===1?one:many}`;
+  let toastT;
+  function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true, 2600); }
+  function sampleErr(e){
+    if (e?.code==="not_granted") return "Du har ikke gitt Bokhyllo lov til å bruke Claude. Du kan endre det i menyen for tillatelser.";
+    if (e?.code==="rate_limited") return "Claude har mye å gjøre akkurat nå. Vent litt og prøv igjen.";
+    if (e?.code==="cancelled") return "";
+    return "Claude svarte ikke denne gangen. Prøv igjen om litt.";
+  }
+
+  /* ---------- top: stats, goal, shelf, tabs ---------- */
+  function renderTop(){
+    const read = ofStatus("read");
+    const rated = read.filter(b => scoreOf(b) > 0);
+    const avg = rated.length ? nb1(rated.reduce((s,b)=>s+scoreOf(b),0)/rated.length) : null;
+    $("stats").textContent = books.length
+      ? `${plural(read.length,"bok","bøker")} lest` + (avg ? ` · snitt ${avg}/10` : "") + ` · ${ofStatus("reading").length} på gang · ${ofStatus("want").length} på ønskelista`
+      : "Ingen bøker ennå";
+
+    // goal
+    const g = $("goal"); g.textContent="";
+    const goal = settings.goals?.[yearNow];
+    const doneYear = read.filter(b => (b.date||"").startsWith(String(yearNow))).length;
+    if (goalEditing){
+      const row = el("div","goal-edit");
+      const lab = el("label",null,`Lesemål for ${yearNow}`); lab.style.display="contents";
+      const inp = el("input"); inp.type="number"; inp.min="1"; inp.id="goalInput"; inp.value = goal || ""; inp.placeholder="antall"; inp.setAttribute("aria-label",`Antall bøker i ${yearNow}`);
+      const span = el("span","muted",`bøker i ${yearNow}`);
+      const save = el("button","btn small","Lagre"); save.type="button";
+      const cancel = el("button","btn ghost small","Avbryt"); cancel.type="button";
+      save.onclick = async ()=>{ const v = parseInt(inp.value,10); const goals = {...(settings.goals||{})}; if (v>0) goals[yearNow]=v; else delete goals[yearNow];
+        settings = {...settings, goals}; goalEditing=false; renderTop(); try{ await store.save(SETTINGS_ID, settings); toast("Lesemålet er lagret"); }catch{ toast("Kunne ikke lagre lesemålet"); } };
+      cancel.onclick = ()=>{ goalEditing=false; renderTop(); };
+      row.append(inp, span, save, cancel); g.append(row);
+      setTimeout(()=>inp.focus(),0);
+    } else if (goal){
+      const line = el("div","goal-line");
+      const txt = el("div","goal-text"); txt.innerHTML = `<b>${doneYear}</b> av <b>${goal}</b> bøker i ${yearNow}`;
+      // pace: where you "should" be today
+      const start = new Date(yearNow,0,1), end = new Date(yearNow+1,0,1);
+      const expected = Math.round(goal * (Date.now()-start)/(end-start));
+      const pace = el("span","muted", doneYear>=goal ? "Målet er nådd!" : doneYear>=expected ? "Du ligger foran skjema" : `${expected-doneYear} bak skjema`);
+      pace.style.fontSize="14px";
+      const ed = el("button","link","Endre mål"); ed.type="button"; ed.onclick=()=>{goalEditing=true; renderTop();};
+      line.append(txt,pace,ed);
+      const tr = el("div","track"); const sp = el("span"); sp.style.width = Math.min(100, doneYear/goal*100)+"%"; tr.append(sp);
+      tr.setAttribute("role","progressbar"); tr.setAttribute("aria-valuenow",doneYear); tr.setAttribute("aria-valuemax",goal);
+      g.append(line,tr);
+    } else {
+      const b = el("button","link",`Sett et lesemål for ${yearNow}`); b.type="button"; b.style.justifySelf="start";
+      b.onclick=()=>{goalEditing=true; renderTop();}; g.append(b);
+    }
+
+    // shelf
+    const shelf = $("shelf"); shelf.textContent = "";
+    const chrono = [...read].sort((a,b)=>(a.date||"").localeCompare(b.date||"") || (a.createdAt||0)-(b.createdAt||0));
+    if (!chrono.length) shelf.append(el("span","shelf-empty","Hylla er tom."));
+    for (const b of chrono){
+      const s = el("button","spine",b.title); s.type="button";
+      s.style.height = (66 + scoreOf(b)*7 + (hash(b.title)%10)) + "px";
+      s.style.background = spineColor(b);
+      s.title = `${b.title}${b.author?" – "+b.author:""}${scoreOf(b)?" · "+scoreOf(b)+"/10":""}`;
+      s.onclick = ()=>{ setTab("read"); jumpTo(b.id); };
+      shelf.append(s);
+    }
+
+    for (const k of ["read","reading","want"]) $("tab-"+k).querySelector(".n").textContent = ofStatus(k).length;
+    for (const t of document.querySelectorAll(".tab")) t.setAttribute("aria-selected", String(t.dataset.tab===tab));
+  }
+
+  /* ---------- list ---------- */
+  const SORTS = {
+    read:[["date","Sist lest"],["score","Høyest score"],["title","Tittel A–Å"],["author","Forfatter A–Å"]],
+    reading:[["start","Sist startet"],["progress","Lengst kommet"],["title","Tittel A–Å"]],
+    want:[["added","Sist lagt til"],["title","Tittel A–Å"],["author","Forfatter A–Å"]]
+  };
+  function fillControls(){
+    const s = $("sort"), keep = s.value;
+    s.textContent=""; for (const [v,l] of SORTS[tab]) { const o=el("option",null,l); o.value=v; s.append(o); }
+    if ([...s.options].some(o=>o.value===keep)) s.value=keep;
+    const f = $("filter"), fk = f.value;
+    f.textContent=""; const all=el("option",null,"Alle sjangre og merkelapper"); all.value=""; f.append(all);
+    const genres = [...new Set(books.map(b=>b.genre).filter(Boolean))].sort(coll.compare);
+    const tags = [...new Set(books.flatMap(b=>b.tags||[]))].sort(coll.compare);
+    if (genres.length){ const og=el("optgroup"); og.label="Sjanger"; for(const g of genres){ const o=el("option",null,g); o.value="g:"+g; og.append(o);} f.append(og); }
+    if (tags.length){ const og=el("optgroup"); og.label="Merkelapp"; for(const t of tags){ const o=el("option",null,"#"+t); o.value="t:"+t; og.append(o);} f.append(og); }
+    if ([...f.options].some(o=>o.value===fk)) f.value=fk;
+    f.hidden = !genres.length && !tags.length;
+    const dl = $("genreList"); dl.textContent="";
+    for (const g of [...new Set([...genres, ...BASE_GENRES])]) { const o=el("option"); o.value=g; dl.append(o); }
+  }
+
+  function renderList(){
+    const q = $("q").value.trim().toLowerCase();
+    const fv = $("filter").value;
+    let view = ofStatus(tab).filter(b => {
+      if (q && ![b.title,b.author,b.comment,b.note,b.genre,...(b.quotes||[]),...(b.tags||[])].some(x => (x||"").toLowerCase().includes(q))) return false;
+      if (fv.startsWith("g:") && b.genre!==fv.slice(2)) return false;
+      if (fv.startsWith("t:") && !(b.tags||[]).includes(fv.slice(2))) return false;
+      return true;
+    });
+    const s = $("sort").value;
+    const prog = b => b.pages ? (b.page||0)/b.pages : 0;
+    view.sort((a,b)=>{
+      if (s==="score") return scoreOf(b)-scoreOf(a) || (b.date||"").localeCompare(a.date||"");
+      if (s==="title") return coll.compare(a.title,b.title);
+      if (s==="author") return coll.compare(a.author||"￿",b.author||"￿");
+      if (s==="progress") return prog(b)-prog(a);
+      if (s==="start") return (b.startDate||"").localeCompare(a.startDate||"") || (b.createdAt||0)-(a.createdAt||0);
+      if (s==="added") return (b.createdAt||0)-(a.createdAt||0);
+      return (b.date||"").localeCompare(a.date||"") || (b.createdAt||0)-(a.createdAt||0);
+    });
+    const list = $("list"); list.textContent = "";
+    if (!view.length){
+      const e = el("div","empty");
+      if (ofStatus(tab).length){ e.append(el("p","big","Ingen treff."), el("p",null,"Prøv et annet søkeord eller filter.")); }
+      else if (tab==="read"){ e.append(el("p","big","Første bok på hylla?"), el("p",null,"Trykk «+ Ny bok», gi den en score fra 1 til 10 og skriv noen linjer om hva du syntes.")); }
+      else if (tab==="reading"){ e.append(el("p","big","Ingen bok på nattbordet."), el("p",null,"Legg til boka du leser nå, så kan du holde styr på hvilken side du er på.")); }
+      else { e.append(el("p","big","Ønskelista er tom."), el("p",null,"Legg til bøker du har lyst til å lese, eller få forslag fra Claude under Oversikt.")); }
+      list.append(e); return;
+    }
+    for (const b of view) list.append(entry(b));
+  }
+
+  function entry(b){
+    const st = statusOf(b), sc = scoreOf(b);
+    const art = el("article","entry"); art.id="b-"+b.id;
+    const head = el("div","e-head");
+    head.append(el("h3","e-title",b.title), el("div","e-author",b.author||"Ukjent forfatter"));
+    const meta = el("div","e-meta");
+    if (st==="read"){
+      const scEl = el("div","e-score"); scEl.innerHTML = sc ? `<b>${sc}</b><span>/10</span>` : `<span>Ingen score</span>`;
+      const bar = el("div","bar"); bar.setAttribute("aria-hidden","true");
+      for (let i=1;i<=10;i++) bar.append(el("i", i<=sc?"on":""));
+      meta.append(scEl,bar,el("div","e-date",fmtDate(b.date)));
+    } else if (st==="reading" && b.startDate){
+      meta.append(el("div","e-date","Begynte " + fmtDate(b.startDate)));
+    }
+    art.append(head, meta);
+
+    const chips = el("div","chips full");
+    if (b.genre) chips.append(el("span","chip g",b.genre));
+    if (b.format) chips.append(el("span","chip",FORMAT[b.format]));
+    if (b.pages && st!=="reading") chips.append(el("span","chip",b.pages+" sider"));
+    for (const t of b.tags||[]) chips.append(el("span","chip","#"+t));
+    if (chips.childNodes.length) art.append(chips);
+
+    if (st==="reading"){
+      const p = el("div","progress full");
+      if (b.pages){
+        const pct = Math.min(100, Math.round((b.page||0)/b.pages*100));
+        const lr = el("div","lbl-row"); lr.append(el("span",null,`Side ${b.page||0} av ${b.pages}`), el("span",null,pct+" %"));
+        const tr = el("div","track"); const sp=el("span"); sp.style.width=pct+"%"; tr.append(sp);
+        p.append(lr,tr);
+      }
+      const upd = el("div","page-upd");
+      const inp = el("input"); inp.type="number"; inp.min="0"; inp.id="pg-"+b.id; inp.placeholder="side"; inp.setAttribute("aria-label","Hvilken side er du på?");
+      if (b.pages) inp.max=b.pages;
+      const ub = el("button","btn soft small","Oppdater side"); ub.type="button";
+      ub.onclick = async ()=>{ const v=parseInt(inp.value,10); if(!(v>=0)) { inp.focus(); return; }
+        try{ await store.save(b.id, {...strip(b), page: b.pages?Math.min(v,b.pages):v}); toast(`Side ${v} lagret`);}catch{ toast("Kunne ikke lagre siden"); } };
+      inp.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); ub.click(); } });
+      upd.append(inp, ub); p.append(upd);
+      art.append(p);
+    }
+
+    if (st==="want" && b.note) art.append(el("p","e-comment full",b.note));
+    if (st!=="want"){
+      if (b.comment || st==="read") art.append(el("p","e-comment full"+(b.comment?"":" none"), b.comment||"Ingen kommentar ennå."));
+      if ((b.quotes||[]).length){ const qd=el("div","quotes full"); for(const q of b.quotes) qd.append(el("blockquote",null,q)); art.append(qd); }
+    }
+
+    const acts = el("div","e-actions full");
+    if (st==="reading"){ const f=el("button","btn small","Ferdig lest"); f.type="button"; f.onclick=()=>openForm(b,{status:"read", date:today(), page:b.pages||b.page}); acts.append(f); }
+    if (st==="want"){ const f=el("button","btn soft small","Begynn å lese"); f.type="button";
+      f.onclick=async ()=>{ try{ await store.save(b.id,{...strip(b), status:"reading", startDate:today(), page:0}); toast(`God lesing! «${b.title}» ligger under Leser nå`);}catch{toast("Kunne ikke flytte boka");} }; acts.append(f); }
+    const ed = el("button","link","Rediger"); ed.type="button"; ed.onclick=()=>openForm(b); acts.append(ed);
+    art.append(acts);
+    return art;
+  }
+  const strip = b => { const {id, ...rest} = b; return rest; };
+
+  function jumpTo(id){
+    $("q").value=""; $("filter").value=""; render();
+    const e = $("b-"+id); if(!e) return;
+    e.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto":"smooth", block:"center"});
+    e.classList.remove("flash"); void e.offsetWidth; e.classList.add("flash");
+  }
+
+  /* ---------- overview ---------- */
+  function hbars(rows, max, cls){
+    const box = el("div","hbars "+(cls||""));
+    for (const [k,n,label] of rows){
+      const r = el("div","hrow"); const t = el("div","t"); const s = el("span", n?"":"z");
+      s.style.width = (max ? n/max*100 : 0) + "%"; t.append(s);
+      r.append(el("div","k",k), t, el("div","n", label ?? String(n)));
+      box.append(r);
+    }
+    return box;
+  }
+  function renderStats(){
+    const v = $("statsView"); v.textContent="";
+    const read = ofStatus("read");
+    const years = [...new Set(read.map(b=>(b.date||"").slice(0,4)).filter(Boolean).map(Number).concat(yearNow))].sort((a,b)=>b-a);
+    if (!years.includes(statsYear)) statsYear = yearNow;
+
+    // year in reading
+    const s1 = el("section");
+    const h = el("div","ov-head"); h.append(el("h2",null,"Leseåret"));
+    const ys = el("select"); ys.id="yearSel"; ys.setAttribute("aria-label","Velg år");
+    for (const y of years){ const o=el("option",null,String(y)); o.value=y; ys.append(o); } ys.value=statsYear;
+    ys.onchange = ()=>{ statsYear = +ys.value; renderStats(); };
+    h.append(ys); s1.append(h);
+    const yb = read.filter(b=>(b.date||"").startsWith(String(statsYear)));
+    const pagesYear = yb.reduce((s,b)=>s+(+b.pages||0),0);
+    const ryr = yb.filter(b=>scoreOf(b)>0);
+    const kp = el("div","kpis");
+    const kpi=(n,l)=>{ const d=el("div","kpi"); d.append(el("b",null,n), el("span",null,l)); return d; };
+    kp.append(kpi(String(yb.length), yb.length===1?"bok lest":"bøker lest"));
+    kp.append(kpi(pagesYear ? pagesYear.toLocaleString("nb-NO") : "–", "sider"));
+    kp.append(kpi(ryr.length ? nb1(ryr.reduce((s,b)=>s+scoreOf(b),0)/ryr.length) : "–", "snittscore"));
+    const goal = settings.goals?.[statsYear];
+    if (goal) kp.append(kpi(`${Math.min(100,Math.round(yb.length/goal*100))} %`, `av målet på ${goal}`));
+    s1.append(kp);
+    const counts = Array(12).fill(0); for (const b of yb) counts[+b.date.slice(5,7)-1]++;
+    const mx = Math.max(1,...counts);
+    const months = el("div","months"); months.setAttribute("role","img"); months.setAttribute("aria-label", `Bøker lest per måned i ${statsYear}: ` + counts.map((c,i)=>`${MONTHS[i]} ${c}`).join(", "));
+    counts.forEach(c=>{ const col=el("div","mcol"); const bb=el("div","b"+(c?"":" zero")); bb.style.height=(c/mx*130)+"px"; col.append(el("span","v",c?String(c):""), bb); months.append(col); });
+    const ml = el("div","mlabels"); ml.setAttribute("aria-hidden","true"); MONTHS.forEach(m=>ml.append(el("span",null,m)));
+    s1.append(months, ml);
+    v.append(s1);
+
+    // per year
+    if (years.length>1){
+      const s2 = el("section"); s2.append(el("h2",null,"Bøker per år"));
+      const per = years.map(y=>[String(y), read.filter(b=>(b.date||"").startsWith(String(y))).length]);
+      s2.append(hbars(per, Math.max(1,...per.map(r=>r[1]))));
+      v.append(s2);
+    }
+
+    // score distribution + top books
+    const two = el("div","twocol");
+    const sd = el("section"); sd.append(el("h2",null,"Slik gir du score"));
+    const dist = []; for (let i=10;i>=1;i--) dist.push([String(i), read.filter(b=>scoreOf(b)===i).length]);
+    sd.append(hbars(dist, Math.max(1,...dist.map(r=>r[1])), "score-dist"));
+    const tb = el("section"); tb.append(el("h2",null,"Dine favoritter"));
+    const top = [...read].filter(b=>scoreOf(b)>0).sort((a,b)=>scoreOf(b)-scoreOf(a) || (b.date||"").localeCompare(a.date||"")).slice(0,5);
+    if (top.length){ const ol=el("ol","toplist"); for(const b of top){ const li=el("li"); const t=el("div"); t.append(el("div",null,b.title), el("div","muted",b.author||"")); t.lastChild.style.fontSize="14px"; li.append(t, el("span","s",scoreOf(b)+"/10")); ol.append(li);} tb.append(ol); }
+    else tb.append(el("p","muted","Gi bøkene en score, så dukker favorittene opp her."));
+    two.append(sd,tb); v.append(two);
+
+    // authors + genres + format
+    const two2 = el("div","twocol");
+    const au = el("section"); au.append(el("h2",null,"Mest leste forfattere"));
+    const am = {}; for (const b of read) if (b.author){ (am[b.author] ||= []).push(scoreOf(b)); }
+    const arows = Object.entries(am).sort((a,b)=>b[1].length-a[1].length || coll.compare(a[0],b[0])).slice(0,6)
+      .map(([a,sc])=>{ const r=sc.filter(Boolean); return [a, sc.length, r.length? `${sc.length} · ${nb1(r.reduce((x,y)=>x+y,0)/r.length)}` : String(sc.length)]; });
+    if (arows.length){ au.append(hbars(arows, Math.max(...arows.map(r=>r[1])))); au.lastChild.querySelectorAll(".hrow").forEach(r=>r.style.gridTemplateColumns="minmax(0,9rem) 1fr 4rem"); au.append(el("p","muted","Antall bøker · snittscore")); au.lastChild.style.fontSize="13px"; au.lastChild.style.margin="0"; }
+    else au.append(el("p","muted","Legg inn forfatter på bøkene for å se dette."));
+    const ge = el("section"); ge.append(el("h2",null,"Sjangre og format"));
+    const gm = {}; for (const b of read) if (b.genre) gm[b.genre]=(gm[b.genre]||0)+1;
+    const grows = Object.entries(gm).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    if (grows.length) ge.append(hbars(grows, Math.max(...grows.map(r=>r[1]))));
+    const frows = Object.keys(FORMAT).map(k=>[FORMAT[k], read.filter(b=>b.format===k).length]).filter(r=>r[1]);
+    if (frows.length){ const fb = hbars(frows, Math.max(...frows.map(r=>r[1]))); fb.style.marginTop = grows.length ? "10px":"0"; ge.append(fb); }
+    if (!grows.length && !frows.length) ge.append(el("p","muted","Legg inn sjanger og format på bøkene for å se fordelingen."));
+    two2.append(au,ge); v.append(two2);
+
+    // recommendations
+    if (sample){
+      const rc = el("section"); const hh = el("div","ov-head"); hh.append(el("h2",null,"Hva bør du lese neste gang?"));
+      const btn = el("button","btn ai", recs ? "Nye forslag" : "Få forslag fra Claude"); btn.type="button"; btn.id="recBtn";
+      btn.disabled = recsState==="loading" || read.length===0;
+      btn.onclick = getRecs; hh.append(btn); rc.append(hh);
+      if (read.length===0) rc.append(el("p","muted","Legg inn noen bøker du har lest og gitt score, så kan Claude foreslå nye ut fra smaken din."));
+      else if (recsState==="loading") rc.append(el("p","muted","Claude ser på hva du har likt …"));
+      else if (recsState && recsState!=="idle" && recsState!=="done") rc.append(el("p","err",recsState));
+      else if (!recs) rc.append(el("p","muted","Claude ser på hvilke bøker du har gitt høy og lav score, og foreslår fem nye. Forslagene kan legges rett i Vil lese."));
+      if (recs && recsState!=="loading"){
+        const box = el("div","recs");
+        for (const r of recs){
+          const c = el("div","rec"); c.append(el("h3",null,r.title), el("div","muted",[r.author,r.genre].filter(Boolean).join(" · ")), el("p",null,r.why||""));
+          const exists = books.some(b=>b.title.toLowerCase()===String(r.title).toLowerCase());
+          const add = el("button","btn soft small", exists ? "Ligger allerede i hylla" : "Legg til i Vil lese"); add.type="button"; add.disabled=exists;
+          add.onclick = async ()=>{ add.disabled=true; try{ await store.save(newId(), {title:String(r.title), author:String(r.author||""), genre:String(r.genre||""), status:"want", note:r.why?("Forslag fra Claude: "+r.why):"", tags:[], quotes:[], createdAt:Date.now()}); add.textContent="Lagt til i Vil lese"; }catch{ add.disabled=false; toast("Kunne ikke legge til boka"); } };
+          c.append(add); box.append(c);
+        }
+        rc.append(box);
+        rc.append(el("p","muted","Forslagene kommer fra Claude og kan inneholde feil. Sjekk at boka finnes før du leter etter den.")); rc.lastChild.style.fontSize="13px";
+      }
+      v.append(rc);
+    }
+  }
+
+  async function getRecs(){
+    const read = ofStatus("read");
+    const lines = read.slice(0,120).map(b=>`- ${b.title}${b.author?" av "+b.author:""}${b.genre?" ("+b.genre+")":""}: ${scoreOf(b)||"ingen"}/10${b.comment?" – "+b.comment.slice(0,140).replace(/\s+/g," "):""}`).join("\n");
+    const skip = books.filter(b=>statusOf(b)!=="read").map(b=>b.title).join("; ");
+    const prompt = `Du er en kunnskapsrik bibliotekar. Her er bøker en leser har lest, med score fra 1 til 10 og noen kommentarer:\n${lines}\n\nBøker leseren allerede leser eller har på ønskelista (ikke foreslå disse): ${skip||"ingen"}\n\nForeslå 5 ekte, eksisterende bøker leseren ikke har lest, ut fra hva hen har likt og ikke likt. Bland gjerne inn én som utvider smaken litt. Svar på norsk bokmål. Svar KUN med JSON: en liste med objekter {"title": string, "author": string, "genre": string (ett–to ord på norsk), "why": string (én–to setninger om hvorfor den passer, med henvisning til bøker leseren har likt)}.`;
+    recsState="loading"; renderStats();
+    try {
+      const res = await sample.json(prompt, {modelTier:"default"});
+      const arr = Array.isArray(res) ? res : (res?.books || res?.recommendations || []);
+      recs = arr.filter(r=>r && r.title).slice(0,5);
+      recsState = recs.length ? "done" : "Claude kom ikke med noen forslag. Prøv igjen.";
+    } catch(e){ recsState = sampleErr(e) || "idle"; }
+    renderStats();
+  }
+
+  /* ---------- tabs ---------- */
+  function setTab(t){
+    tab = t;
+    try { history.replaceState(null,"","#"+TAB_HASH[t]); } catch {}
+    if (t!=="stats"){ $("form").hidden = true; editingId=null; }
+    render();
+  }
+  $("tabs").addEventListener("click", e=>{ const b=e.target.closest(".tab"); if(b) setTab(b.dataset.tab); });
+
+  function render(){
+    renderTop();
+    const isStats = tab==="stats";
+    $("listView").hidden = isStats; $("statsView").hidden = !isStats;
+    if (isStats) renderStats(); else { fillControls(); renderList(); }
+  }
+
+  /* ---------- form ---------- */
+  function setSeg(id, val){ for (const b of $(id).querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.v===val)); }
+  $("f-status").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; formStatus=b.dataset.v; setSeg("f-status",formStatus); applyStatusFields();
+    if (formStatus==="read" && !$("f-date").value) $("f-date").value=today();
+    if (formStatus==="reading" && !$("f-start").value) $("f-start").value=today(); });
+  $("f-format").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; formFormat = formFormat===b.dataset.v ? "" : b.dataset.v; setSeg("f-format",formFormat); });
+  function applyStatusFields(){
+    for (const n of $("form").querySelectorAll("[data-for]")) n.hidden = !n.dataset.for.split(" ").includes(formStatus);
+  }
+  function drawScore(){
+    const box = $("f-score"); box.textContent="";
+    for (let i=1;i<=10;i++){
+      const s=el("button","score-btn"+(i===formScore?" on":(i<formScore?" fill":"")),String(i)); s.type="button";
+      s.setAttribute("role","radio"); s.setAttribute("aria-checked", String(i===formScore));
+      s.onclick = ()=>{ formScore = (formScore===i?0:i); drawScore(); };
+      box.append(s);
+    }
+    $("scoreHint").textContent = formScore ? `· ${formScore}/10, ${SCORE_WORDS[formScore]}` : "· trykk et tall";
+  }
+  function openForm(b, preset){
+    const d = {...(b||{}), ...(preset||{})};
+    editingId = b ? b.id : null;
+    $("formTitle").textContent = b ? (preset?.status==="read" && statusOf(b)!=="read" ? "Ferdig lest!" : "Rediger bok") : "Ny bok";
+    formStatus = d.status || (b ? statusOf(b) : (tab==="stats"?"read":tab));
+    setSeg("f-status", formStatus);
+    $("f-title").value = d.title||""; $("f-author").value = d.author||"";
+    $("f-genre").value = d.genre||""; $("f-tags").value = (d.tags||[]).join(", ");
+    formFormat = d.format||""; setSeg("f-format", formFormat);
+    $("f-pages").value = d.pages||""; $("f-page").value = d.page ?? "";
+    $("f-start").value = d.startDate || (!b && formStatus==="reading" ? today() : "");
+    $("f-date").value = d.date || (!b && formStatus==="read" ? today() : "");
+    $("f-comment").value = d.comment||""; $("f-quotes").value = (d.quotes||[]).join("\n\n"); $("f-note").value = d.note||"";
+    formScore = scoreOf(d); drawScore();
+    applyStatusFields();
+    reviewBackup=null; $("undoReview").hidden=true; $("aiNote").hidden=true;
+    $("delBtn").hidden = !b; disarm();
+    $("f-err").hidden = true;
+    $("form").hidden = false;
+    $("form").scrollIntoView({block:"nearest"});
+    (preset?.status==="read" ? $("f-score").querySelector("button") : $("f-title")).focus();
+  }
+  function closeForm(){ $("form").hidden = true; editingId=null; }
+  function disarm(){ const d=$("delBtn"); d.classList.remove("armed"); d.textContent="Slett"; }
+  function showErr(m){ const e=$("f-err"); e.textContent=m; e.hidden=!m; }
+
+  $("newBtn").addEventListener("click", ()=>openForm(null));
+  $("cancelBtn").addEventListener("click", closeForm);
+  $("q").addEventListener("input", renderList);
+  $("sort").addEventListener("change", renderList);
+  $("filter").addEventListener("change", renderList);
+
+  $("form").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const title = $("f-title").value.trim();
+    if (!title){ showErr("Skriv inn tittelen på boka."); $("f-title").focus(); return; }
+    const prev = books.find(x=>x.id===editingId);
+    const id = editingId || newId();
+    const num = v => { const n=parseInt(v,10); return n>=0 ? n : null; };
+    const data = {
+      title, author:$("f-author").value.trim(), status:formStatus,
+      genre:$("f-genre").value.trim(), format:formFormat,
+      tags:[...new Set($("f-tags").value.split(",").map(t=>t.trim().replace(/^#/,"")).filter(Boolean))],
+      pages:num($("f-pages").value), page:num($("f-page").value),
+      startDate:$("f-start").value, date: formStatus==="read" ? $("f-date").value : "",
+      score: formStatus==="read" ? formScore : 0,
+      comment:$("f-comment").value.trim(),
+      quotes:$("f-quotes").value.split(/\n\s*\n/).map(q=>q.trim()).filter(Boolean),
+      note:$("f-note").value.trim(),
+      createdAt: prev?.createdAt || Date.now()
+    };
+    $("saveBtn").disabled = true; $("saveBtn").textContent = "Lagrer …";
+    try {
+      await store.save(id, data);
+      closeForm();
+      if (tab!==formStatus) setTab(formStatus);
+      if (prev && statusOf(prev)!=="read" && formStatus==="read") toast(`Gratulerer, «${title}» står nå på hylla!`);
+      setTimeout(()=>jumpTo(id), 50);
+    } catch(err){
+      showErr(err?.code==="quota_exceeded" ? "Lagringsplassen er full. Slett noen bøker og prøv igjen." : "Kunne ikke lagre. Sjekk nettforbindelsen og prøv igjen.");
+    } finally { $("saveBtn").disabled = false; $("saveBtn").textContent = "Lagre"; }
+  });
+
+  $("delBtn").addEventListener("click", async ()=>{
+    const d=$("delBtn");
+    if (!d.classList.contains("armed")){ d.classList.add("armed"); d.textContent="Trykk igjen for å slette"; return; }
+    try { await store.remove(editingId); closeForm(); toast("Boka er slettet"); }
+    catch { showErr("Kunne ikke slette boka. Prøv igjen."); disarm(); }
+  });
+
+  /* ---------- Claude helpers in the form ---------- */
+  $("autofillBtn").addEventListener("click", async ()=>{
+    const title = $("f-title").value.trim();
+    if (!title){ showErr("Skriv tittelen først, så kan Claude fylle ut resten."); $("f-title").focus(); return; }
+    showErr("");
+    const btn=$("autofillBtn"); btn.disabled=true; btn.textContent="Slår opp …";
+    const note=$("aiNote");
+    try {
+      const r = await sample.json(`Hva vet du om boka med tittel "${title}"${$("f-author").value.trim()?` av ${$("f-author").value.trim()}`:""}? Svar KUN med JSON: {"known": boolean, "title": string (korrekt skrevet tittel), "author": string, "genre": string (ett–to ord på norsk bokmål, f.eks. "Roman", "Krim", "Sakprosa", "Fantasy"), "pages": number (omtrentlig sidetall i en vanlig utgave, 0 hvis ukjent)}. Hvis du ikke er rimelig sikker på hvilken bok det er, sett known til false og la feltene være tomme.`, {modelTier:"quick"});
+      if (!r || !r.known){ note.textContent="Claude kjente ikke igjen boka. Fyll inn selv."; note.hidden=false; }
+      else {
+        const filled=[];
+        if (r.author && !$("f-author").value.trim()){ $("f-author").value=r.author; filled.push("forfatter"); }
+        if (r.genre && !$("f-genre").value.trim()){ $("f-genre").value=r.genre; filled.push("sjanger"); }
+        if (r.pages>0 && !$("f-pages").value){ $("f-pages").value=Math.round(r.pages); filled.push("sidetall"); }
+        note.textContent = filled.length ? `Claude fylte inn ${filled.join(", ")}. Sjekk at det stemmer, særlig sidetallet, som varierer mellom utgaver.` : "Feltene var allerede fylt ut.";
+        note.hidden=false;
+      }
+    } catch(e){ const m=sampleErr(e); if(m){ note.textContent=m; note.hidden=false; } }
+    finally { btn.disabled=false; btn.textContent="Fyll ut resten"; }
+  });
+
+  $("reviewBtn").addEventListener("click", async ()=>{
+    const notes = $("f-comment").value.trim();
+    if (!notes){ showErr("Skriv noen stikkord i kommentarfeltet først."); $("f-comment").focus(); return; }
+    showErr("");
+    const btn=$("reviewBtn"); btn.disabled=true; btn.textContent="Skriver …";
+    reviewBackup = $("f-comment").value;
+    const title=$("f-title").value.trim(), author=$("f-author").value.trim();
+    try {
+      await sample(`Gjør disse stikkordene om til en kort, personlig bokomtale på norsk bokmål (3–6 setninger), skrevet i jeg-form som om leseren selv skrev den. Bevar leserens meninger og ordvalg der det går. Ikke finn på handling, personer eller detaljer som ikke står i stikkordene. Ikke bruk overskrift, bare selve teksten.\n\nBok: ${title||"ukjent tittel"}${author?" av "+author:""}${formScore?`\nScore: ${formScore}/10`:""}\nStikkord:\n${notes}`,
+        {modelTier:"default", onText:({text})=>{ $("f-comment").value = text; }});
+      $("undoReview").hidden=false;
+    } catch(e){ $("f-comment").value = reviewBackup; reviewBackup=null; const m=sampleErr(e); if(m) showErr(m); }
+    finally { btn.disabled=false; btn.textContent="Gjør stikkord om til omtale"; }
+  });
+  $("undoReview").addEventListener("click", ()=>{ if(reviewBackup!=null){ $("f-comment").value=reviewBackup; reviewBackup=null; } $("undoReview").hidden=true; });
+
+  /* ---------- storage ---------- */
+  function setDocs(arr){
+    const s = arr.find(d=>d.id===SETTINGS_ID);
+    settings = s ? {goals:{}, ...strip(s)} : {goals:{}};
+    books = arr.filter(d=>d.id!==SETTINGS_ID && d.title);
+    if (!goalEditing) render(); else { renderTop(); }
+  }
+  function localStore(msg){
+    const KEY="bokhyllo.docs";
+    let docs = [];
+    try { docs = JSON.parse(localStorage.getItem(KEY)||localStorage.getItem("bokhyllo.books")||"[]"); } catch {}
+    setDocs(docs);
+    const persist = ()=>{ try { localStorage.setItem(KEY, JSON.stringify(docs)); } catch {} };
+    if (msg){ $("notice").textContent = msg; $("notice").hidden = false; }
+    return {
+      async save(id,data){ docs = docs.filter(b=>b.id!==id).concat({id,...data}); persist(); setDocs(docs); },
+      async remove(id){ docs = docs.filter(b=>b.id!==id); persist(); setDocs(docs); }
+    };
+  }
+
+  const fromHash = Object.entries(TAB_HASH).find(([,h])=>"#"+h===location.hash);
+  if (fromHash) tab = fromHash[0];
+  store = localStore(null);
+
+  /* ---------- backup ---------- */
+  $("exportBtn").addEventListener("click", ()=>{
+    const docs = books.map(b=>({...b})).concat([{id:SETTINGS_ID, ...settings}]);
+    const blob = new Blob([JSON.stringify({app:"bokhyllo", version:1, exported:new Date().toISOString(), docs}, null, 2)], {type:"application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `bokhyllo-${today()}.json`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+    toast("Sikkerhetskopien er lastet ned");
+  });
+  $("importFile").addEventListener("change", async e=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      const docs = Array.isArray(data) ? data : data.docs;
+      if (!Array.isArray(docs)) throw 0;
+      let n = 0;
+      for (const d of docs){ if (!d || !d.id) continue; const {id, ...rest} = d; await store.save(id, rest); if (id!==SETTINGS_ID) n++; }
+      toast(`Hentet ${n} ${n===1?"bok":"bøker"} fra sikkerhetskopien`);
+    } catch { toast("Fant ingen bøker i filen. Velg en sikkerhetskopi fra Bokhyllo."); }
+    e.target.value = "";
+  });
+  try { navigator.storage?.persist?.(); } catch {}
+  if ("serviceWorker" in navigator && location.protocol==="https:") { navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+
+  (async ()=>{
+    const use = n => window.claude?.use ? window.claude.use(n).catch(()=>null) : Promise.resolve(null);
+    const [db, user, smp] = await Promise.all([use("db"), use("user"), use("sample")]);
+    sample = smp;
+    if (sample){ $("autofillBtn").hidden=false; $("reviewBtn").hidden=false; if (tab==="stats") renderStats(); }
+    const uid = user ? await user.id() : null;
+    if (!db || !uid){
+      store = localStore(null);
+      return;
+    }
+    const col = db.collection("data/users/" + uid);
+    col.onSnapshot(snap=>{
+      setDocs(snap.docs.map(d=>({id:d.id, ...d.data()})));
+    }, ()=>{
+      $("notice").textContent = "Mistet forbindelsen til lagringen. Last inn siden på nytt."; $("notice").hidden = false;
+    });
+    store = { save:(id,data)=>col.doc(id).set(data), remove:(id)=>col.doc(id).delete() };
+  })();
+})();
+</script>
+
+</body>
+</html>
