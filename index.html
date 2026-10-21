@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bokhyllo</title>
-<meta name="theme-color" content="#FBF0C4">
+<meta name="theme-color" content="#FAF5E1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bokhyllo">
@@ -22,7 +22,7 @@
 /* Layout: a reading journal on butter-yellow paper — goal and shelf on top, tabs for read / reading / want / overview below. Single light look by design. */
 :root{
   color-scheme:light;
-  --paper:#FBF0C4; --sheet:#FFFAE6; --ink:#2B2A1F; --muted:#6F6A4E; --line:#E4D49A;
+  --paper:#FAF5E1; --sheet:#FFFDF5; --ink:#2B2A1F; --muted:#6B6852; --line:#E8E0BE;
   --accent:#4F7396; --accent-soft:#CFDDEA; --accent-ink:#FFFFFF; --danger:#A2432F;
   --spine-1:#7E9BB8; --spine-2:#6F86A0; --spine-3:#B97A5B; --spine-4:#8C6F8E; --spine-5:#9A9455; --spine-6:#5F7F8C;
   --display:"Instrument Serif", Georgia, "Times New Roman", serif;
@@ -81,7 +81,6 @@ button{font:inherit;cursor:pointer;color:inherit}
 .btn.danger.armed{background:var(--danger);color:var(--sheet);border-color:var(--danger)}
 .btn:focus-visible,.link:focus-visible,.score-btn:focus-visible,.tab:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .link{background:none;border:0;padding:0;color:var(--accent);font-size:14px;font-weight:600}
-.ai::before{content:"✦ ";}
 
 /* Form */
 form{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;gap:16px}
@@ -107,7 +106,6 @@ textarea{min-height:110px;resize:vertical}
 .form-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .form-actions .spacer{flex:1}
 .err{color:var(--danger);font-size:14px}
-.ai-note{font-size:13px;color:var(--accent)}
 
 /* Entries */
 .list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
@@ -175,11 +173,6 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
 .kpis{display:flex;flex-wrap:wrap;gap:12px 32px}
 .kpi b{display:block;font-family:var(--display);font-weight:400;font-size:40px;line-height:1}
 .kpi span{font-size:13px;color:var(--muted)}
-.recs{display:grid;gap:12px}
-.rec{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:4px}
-.rec h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0;line-height:1.2}
-.rec p{margin:0;font-size:15px}
-.rec .btn{justify-self:start;margin-top:6px}
 .backup{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:24px;margin-top:12px}
 .backup p{margin:0;max-width:65ch;font-size:14px}
 .import-btn{position:relative;overflow:hidden;display:inline-block;text-transform:none;letter-spacing:0;font-size:16px;color:var(--ink)}
@@ -226,13 +219,9 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
         </div>
       </div>
       <div class="row">
-        <div class="lbl">
-          <div class="lbl-row"><span>Tittel</span><button type="button" class="link ai" id="autofillBtn" hidden>Fyll ut resten</button></div>
-          <input id="f-title" required autocomplete="off" aria-label="Tittel" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:16px;color:var(--ink)">
-        </div>
+        <label>Tittel<input id="f-title" required autocomplete="off"></label>
         <label>Forfatter<input id="f-author" autocomplete="off"></label>
       </div>
-      <div class="ai-note" id="aiNote" hidden></div>
       <div class="row">
         <label>Sjanger<input id="f-genre" list="genreList" autocomplete="off" placeholder="f.eks. roman"></label>
         <label>Merkelapper<input id="f-tags" autocomplete="off" placeholder="skill med komma: pensum, anbefalt av Kari"></label>
@@ -254,10 +243,7 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
       <div class="lbl" data-for="read">Score <span class="score-hint" id="scoreHint"></span>
         <div class="score-input" id="f-score" role="radiogroup" aria-label="Score fra 1 til 10"></div>
       </div>
-      <div class="lbl" data-for="read reading">
-        <div class="lbl-row"><span>Kommentar</span><span><button type="button" class="link ai" id="reviewBtn" hidden>Gjør stikkord om til omtale</button> <button type="button" class="link" id="undoReview" hidden>Angre</button></span></div>
-        <textarea id="f-comment" aria-label="Kommentar" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:16px;color:var(--ink)" placeholder="Hva satt igjen? Skriv gjerne bare stikkord, så kan Claude gjøre dem om til en omtale."></textarea>
-      </div>
+      <label data-for="read reading">Kommentar<textarea id="f-comment" placeholder="Hva satt igjen? Tanker, hva du likte og ikke likte, hvem du vil anbefale den til …"></textarea></label>
       <label data-for="read reading">Favorittsitater<textarea id="f-quotes" placeholder="Ett sitat per avsnitt. La det være en tom linje mellom hvert sitat."></textarea></label>
       <label data-for="want">Notat<textarea id="f-note" placeholder="Hvorfor vil du lese den? Hvem anbefalte den?" style="min-height:80px"></textarea></label>
       <div class="err" id="f-err" hidden></div>
@@ -299,10 +285,10 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
   const SETTINGS_ID = "__settings";
 
   let books = [], settings = {goals:{}};
-  let store = null, sample = null;
+  let store = null;
   let tab = "read";
   let editingId = null, formScore = 0, formStatus = "read", formFormat = "";
-  let reviewBackup = null, recs = null, recsState = "idle", statsYear = new Date().getFullYear();
+  let statsYear = new Date().getFullYear();
   let goalEditing = false;
 
   /* ---------- helpers ---------- */
@@ -320,12 +306,6 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
   const plural = (n, one, many) => `${n} ${n===1?one:many}`;
   let toastT;
   function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true, 2600); }
-  function sampleErr(e){
-    if (e?.code==="not_granted") return "Du har ikke gitt Bokhyllo lov til å bruke Claude. Du kan endre det i menyen for tillatelser.";
-    if (e?.code==="rate_limited") return "Claude har mye å gjøre akkurat nå. Vent litt og prøv igjen.";
-    if (e?.code==="cancelled") return "";
-    return "Claude svarte ikke denne gangen. Prøv igjen om litt.";
-  }
 
   /* ---------- top: stats, goal, shelf, tabs ---------- */
   function renderTop(){
@@ -435,7 +415,7 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
       if (ofStatus(tab).length){ e.append(el("p","big","Ingen treff."), el("p",null,"Prøv et annet søkeord eller filter.")); }
       else if (tab==="read"){ e.append(el("p","big","Første bok på hylla?"), el("p",null,"Trykk «+ Ny bok», gi den en score fra 1 til 10 og skriv noen linjer om hva du syntes.")); }
       else if (tab==="reading"){ e.append(el("p","big","Ingen bok på nattbordet."), el("p",null,"Legg til boka du leser nå, så kan du holde styr på hvilken side du er på.")); }
-      else { e.append(el("p","big","Ønskelista er tom."), el("p",null,"Legg til bøker du har lyst til å lese, eller få forslag fra Claude under Oversikt.")); }
+      else { e.append(el("p","big","Ønskelista er tom."), el("p",null,"Legg til bøker du har lyst til å lese, så har du dem klare når du trenger en ny bok.")); }
       list.append(e); return;
     }
     for (const b of view) list.append(entry(b));
@@ -585,45 +565,6 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
     if (!grows.length && !frows.length) ge.append(el("p","muted","Legg inn sjanger og format på bøkene for å se fordelingen."));
     two2.append(au,ge); v.append(two2);
 
-    // recommendations
-    if (sample){
-      const rc = el("section"); const hh = el("div","ov-head"); hh.append(el("h2",null,"Hva bør du lese neste gang?"));
-      const btn = el("button","btn ai", recs ? "Nye forslag" : "Få forslag fra Claude"); btn.type="button"; btn.id="recBtn";
-      btn.disabled = recsState==="loading" || read.length===0;
-      btn.onclick = getRecs; hh.append(btn); rc.append(hh);
-      if (read.length===0) rc.append(el("p","muted","Legg inn noen bøker du har lest og gitt score, så kan Claude foreslå nye ut fra smaken din."));
-      else if (recsState==="loading") rc.append(el("p","muted","Claude ser på hva du har likt …"));
-      else if (recsState && recsState!=="idle" && recsState!=="done") rc.append(el("p","err",recsState));
-      else if (!recs) rc.append(el("p","muted","Claude ser på hvilke bøker du har gitt høy og lav score, og foreslår fem nye. Forslagene kan legges rett i Vil lese."));
-      if (recs && recsState!=="loading"){
-        const box = el("div","recs");
-        for (const r of recs){
-          const c = el("div","rec"); c.append(el("h3",null,r.title), el("div","muted",[r.author,r.genre].filter(Boolean).join(" · ")), el("p",null,r.why||""));
-          const exists = books.some(b=>b.title.toLowerCase()===String(r.title).toLowerCase());
-          const add = el("button","btn soft small", exists ? "Ligger allerede i hylla" : "Legg til i Vil lese"); add.type="button"; add.disabled=exists;
-          add.onclick = async ()=>{ add.disabled=true; try{ await store.save(newId(), {title:String(r.title), author:String(r.author||""), genre:String(r.genre||""), status:"want", note:r.why?("Forslag fra Claude: "+r.why):"", tags:[], quotes:[], createdAt:Date.now()}); add.textContent="Lagt til i Vil lese"; }catch{ add.disabled=false; toast("Kunne ikke legge til boka"); } };
-          c.append(add); box.append(c);
-        }
-        rc.append(box);
-        rc.append(el("p","muted","Forslagene kommer fra Claude og kan inneholde feil. Sjekk at boka finnes før du leter etter den.")); rc.lastChild.style.fontSize="13px";
-      }
-      v.append(rc);
-    }
-  }
-
-  async function getRecs(){
-    const read = ofStatus("read");
-    const lines = read.slice(0,120).map(b=>`- ${b.title}${b.author?" av "+b.author:""}${b.genre?" ("+b.genre+")":""}: ${scoreOf(b)||"ingen"}/10${b.comment?" – "+b.comment.slice(0,140).replace(/\s+/g," "):""}`).join("\n");
-    const skip = books.filter(b=>statusOf(b)!=="read").map(b=>b.title).join("; ");
-    const prompt = `Du er en kunnskapsrik bibliotekar. Her er bøker en leser har lest, med score fra 1 til 10 og noen kommentarer:\n${lines}\n\nBøker leseren allerede leser eller har på ønskelista (ikke foreslå disse): ${skip||"ingen"}\n\nForeslå 5 ekte, eksisterende bøker leseren ikke har lest, ut fra hva hen har likt og ikke likt. Bland gjerne inn én som utvider smaken litt. Svar på norsk bokmål. Svar KUN med JSON: en liste med objekter {"title": string, "author": string, "genre": string (ett–to ord på norsk), "why": string (én–to setninger om hvorfor den passer, med henvisning til bøker leseren har likt)}.`;
-    recsState="loading"; renderStats();
-    try {
-      const res = await sample.json(prompt, {modelTier:"default"});
-      const arr = Array.isArray(res) ? res : (res?.books || res?.recommendations || []);
-      recs = arr.filter(r=>r && r.title).slice(0,5);
-      recsState = recs.length ? "done" : "Claude kom ikke med noen forslag. Prøv igjen.";
-    } catch(e){ recsState = sampleErr(e) || "idle"; }
-    renderStats();
   }
 
   /* ---------- tabs ---------- */
@@ -676,7 +617,6 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
     $("f-comment").value = d.comment||""; $("f-quotes").value = (d.quotes||[]).join("\n\n"); $("f-note").value = d.note||"";
     formScore = scoreOf(d); drawScore();
     applyStatusFields();
-    reviewBackup=null; $("undoReview").hidden=true; $("aiNote").hidden=true;
     $("delBtn").hidden = !b; disarm();
     $("f-err").hidden = true;
     $("form").hidden = false;
@@ -731,43 +671,6 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
     catch { showErr("Kunne ikke slette boka. Prøv igjen."); disarm(); }
   });
 
-  /* ---------- Claude helpers in the form ---------- */
-  $("autofillBtn").addEventListener("click", async ()=>{
-    const title = $("f-title").value.trim();
-    if (!title){ showErr("Skriv tittelen først, så kan Claude fylle ut resten."); $("f-title").focus(); return; }
-    showErr("");
-    const btn=$("autofillBtn"); btn.disabled=true; btn.textContent="Slår opp …";
-    const note=$("aiNote");
-    try {
-      const r = await sample.json(`Hva vet du om boka med tittel "${title}"${$("f-author").value.trim()?` av ${$("f-author").value.trim()}`:""}? Svar KUN med JSON: {"known": boolean, "title": string (korrekt skrevet tittel), "author": string, "genre": string (ett–to ord på norsk bokmål, f.eks. "Roman", "Krim", "Sakprosa", "Fantasy"), "pages": number (omtrentlig sidetall i en vanlig utgave, 0 hvis ukjent)}. Hvis du ikke er rimelig sikker på hvilken bok det er, sett known til false og la feltene være tomme.`, {modelTier:"quick"});
-      if (!r || !r.known){ note.textContent="Claude kjente ikke igjen boka. Fyll inn selv."; note.hidden=false; }
-      else {
-        const filled=[];
-        if (r.author && !$("f-author").value.trim()){ $("f-author").value=r.author; filled.push("forfatter"); }
-        if (r.genre && !$("f-genre").value.trim()){ $("f-genre").value=r.genre; filled.push("sjanger"); }
-        if (r.pages>0 && !$("f-pages").value){ $("f-pages").value=Math.round(r.pages); filled.push("sidetall"); }
-        note.textContent = filled.length ? `Claude fylte inn ${filled.join(", ")}. Sjekk at det stemmer, særlig sidetallet, som varierer mellom utgaver.` : "Feltene var allerede fylt ut.";
-        note.hidden=false;
-      }
-    } catch(e){ const m=sampleErr(e); if(m){ note.textContent=m; note.hidden=false; } }
-    finally { btn.disabled=false; btn.textContent="Fyll ut resten"; }
-  });
-
-  $("reviewBtn").addEventListener("click", async ()=>{
-    const notes = $("f-comment").value.trim();
-    if (!notes){ showErr("Skriv noen stikkord i kommentarfeltet først."); $("f-comment").focus(); return; }
-    showErr("");
-    const btn=$("reviewBtn"); btn.disabled=true; btn.textContent="Skriver …";
-    reviewBackup = $("f-comment").value;
-    const title=$("f-title").value.trim(), author=$("f-author").value.trim();
-    try {
-      await sample(`Gjør disse stikkordene om til en kort, personlig bokomtale på norsk bokmål (3–6 setninger), skrevet i jeg-form som om leseren selv skrev den. Bevar leserens meninger og ordvalg der det går. Ikke finn på handling, personer eller detaljer som ikke står i stikkordene. Ikke bruk overskrift, bare selve teksten.\n\nBok: ${title||"ukjent tittel"}${author?" av "+author:""}${formScore?`\nScore: ${formScore}/10`:""}\nStikkord:\n${notes}`,
-        {modelTier:"default", onText:({text})=>{ $("f-comment").value = text; }});
-      $("undoReview").hidden=false;
-    } catch(e){ $("f-comment").value = reviewBackup; reviewBackup=null; const m=sampleErr(e); if(m) showErr(m); }
-    finally { btn.disabled=false; btn.textContent="Gjør stikkord om til omtale"; }
-  });
-  $("undoReview").addEventListener("click", ()=>{ if(reviewBackup!=null){ $("f-comment").value=reviewBackup; reviewBackup=null; } $("undoReview").hidden=true; });
 
   /* ---------- storage ---------- */
   function setDocs(arr){
@@ -816,24 +719,6 @@ blockquote{margin:0;padding-left:14px;border-left:3px solid var(--accent-soft);f
   try { navigator.storage?.persist?.(); } catch {}
   if ("serviceWorker" in navigator && location.protocol==="https:") { navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 
-  (async ()=>{
-    const use = n => window.claude?.use ? window.claude.use(n).catch(()=>null) : Promise.resolve(null);
-    const [db, user, smp] = await Promise.all([use("db"), use("user"), use("sample")]);
-    sample = smp;
-    if (sample){ $("autofillBtn").hidden=false; $("reviewBtn").hidden=false; if (tab==="stats") renderStats(); }
-    const uid = user ? await user.id() : null;
-    if (!db || !uid){
-      store = localStore(null);
-      return;
-    }
-    const col = db.collection("data/users/" + uid);
-    col.onSnapshot(snap=>{
-      setDocs(snap.docs.map(d=>({id:d.id, ...d.data()})));
-    }, ()=>{
-      $("notice").textContent = "Mistet forbindelsen til lagringen. Last inn siden på nytt."; $("notice").hidden = false;
-    });
-    store = { save:(id,data)=>col.doc(id).set(data), remove:(id)=>col.doc(id).delete() };
-  })();
 })();
 </script>
 
